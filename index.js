@@ -2,14 +2,12 @@ const express = require('express')
 const app = express();
 const cors =require('cors');
 const port = process.env.PORT || 8000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
 require('dotenv').config()
 // middleware
 app.use(cors());
 app.use(express.json())
 
-// sodium-cafe
-// c1Jikx9yy2K54j6Z
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.vjcdyry.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -48,6 +46,52 @@ app.get('/menu', async(req,res)=>{
      res.send(result)
   })
 
+//   get cart data for single user
+app.get('/carts',async(req,res)=>{
+     const email = req.query.email;
+     const filter = {email: email}
+     const result = await cartCollections.find(filter).toArray();
+     res.send(result)
+})
+
+
+// get specific cart
+
+app.get('/carts/:id', async(req,res)=>{
+    const id = req.params.id;
+    const filter= {_id: new ObjectId(id)}
+    const result = await cartCollections.findOne(filter)
+    res.send(result)
+})
+
+
+
+
+
+// delete items from cart
+
+app.delete('/carts/:id', async(req,res)=>{
+    const id = req.params.id;
+    const filter= {_id: new ObjectId(id)}
+    const result = await cartCollections.deleteOne(filter)
+    res.send(result)
+})
+
+// update cart quantity
+
+app.put('/carts/:id', async(req,res)=>{
+    const id = req.params.id;
+    const {quantity}=req.body;
+    const filter= {_id: new ObjectId(id)}
+    const options = {upsert:true}
+
+    const updateDoc={
+        $set:{
+            quantity:parseInt(quantity,10)
+        }
+    }
+    const result = await cartCollections.updateOne(filter,updateDoc,options)
+})
 
 
 
